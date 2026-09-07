@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w-full opacity-0 animate-fade-in">
+    <div class="mb-8">
+        <h2 class="text-3xl font-extrabold text-slate-900">Explore Library</h2>
+        <p class="text-slate-500 font-medium mt-1">Browse verified class notes by branch and semester.</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm mb-8 w-full">
+        <form method="GET" action="{{ url_for('all_notes') }}" class="flex flex-col sm:flex-row items-center gap-4 w-full">
+            <div class="relative w-full sm:w-auto flex-1">
+                <select name="branch" onchange="this.form.submit()" class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:border-primary">
+                    <option value="">All Branches</option>
+                    <option value="BCA" {% if selected_branch == 'BCA' %}selected{% endif %}>BCA</option>
+                    <option value="BBA" {% if selected_branch == 'BBA' %}selected{% endif %}>BBA</option>
+                    <option value="B.COM" {% if selected_branch == 'B.COM' %}selected{% endif %}>B.COM</option>
+                    <option value="BSC(CS)" {% if selected_branch == 'BSC(CS)' %}selected{% endif %}>BSC(CS)</option>
+                    <option value="BSC(ELECTRONICS)" {% if selected_branch == 'BSC(ELECTRONICS)' %}selected{% endif %}>BSC(ELECTRONICS)</option>
+                </select>
+                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+            </div>
+
+            <div class="relative w-full sm:w-auto flex-1">
+                <select name="semester" onchange="this.form.submit()" class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:border-primary">
+                    <option value="">All Semesters</option>
+                    {% for i in range(1, 7) %}
+                    <option value="{{ i }}" {% if selected_semester == i|string %}selected{% endif %}>Semester {{ i }}</option>
+                    {% endfor %}
+                </select>
+                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+            </div>
+
+            {% if selected_branch or selected_semester or search_query %}
+            <a href="{{ url_for('all_notes') }}" class="w-full sm:w-auto text-center text-sm font-bold text-rose-500 hover:bg-rose-50 px-6 py-3 rounded-xl transition-colors">
+                Clear Filters
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Notes Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+        {% for note in notes %}
+        <article class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 transition-all flex flex-col justify-between w-full">
+            <div>
+                <div class="flex items-start justify-between gap-2 mb-4">
+                    <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-[10px] font-extrabold whitespace-nowrap">{{ note['subject'] }}</span>
+                    <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-right">{{ note['branch'] }} • S{{ note['semester'] }}</span>
+                </div>
+                <h4 class="text-lg font-extrabold text-slate-900 leading-snug mb-2">{{ note['title'] }}</h4>
+                <p class="text-sm text-slate-500 line-clamp-3 mb-6 font-medium">{{ note['description'] }}</p>
+            </div>
+            
+            <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">{{ note['author_name'][0] }}</div>
+                    <div>
+                        <p class="text-xs font-extrabold text-slate-900">{{ note['author_name'] }}</p>
+                        <p class="text-[10px] text-slate-400">{{ note['created_at'] }}</p>
+                    </div>
+                </div>
+                
+                <button onclick="openReader('{{ note['file_link'] }}', '{{ note['title']|e }}')" class="px-4 py-2 bg-blue-50 hover:bg-primary text-primary hover:text-white rounded-xl text-xs font-extrabold transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i> Read
+                </button>
+            </div>
+        </article>
+        {% else %}
+        <div class="col-span-full w-full bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-4"><i data-lucide="search-x" class="w-8 h-8"></i></div>
+            <p class="text-slate-600 font-extrabold text-lg">No notes found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Reader -->
+<div id="readerModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity duration-300">
+    <div class="bg-white w-full max-w-4xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden relative">
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+            <h3 id="modalTitle" class="text-sm font-extrabold truncate pr-4">Reading Note</h3>
+            <div class="flex items-center gap-2">
+                <a id="modalDownload" href="#" download class="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-white" title="Download File">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                </a>
+                <button onclick="closeReader()" class="p-2 bg-white/10 hover:bg-rose-500 rounded-xl transition-colors text-white" title="Close Reader">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 bg-slate-100 relative flex items-center justify-center overflow-auto p-2 sm:p-4" id="readerContainer"></div>
+    </div>
+</div>
+
+<script>
+    function openReader(fileUrl, title) {
+        const modal = document.getElementById('readerModal');
+        const container = document.getElementById('readerContainer');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDownload = document.getElementById('modalDownload');
+        
+        modalTitle.innerText = title;
+        modalDownload.href = fileUrl;
+        container.innerHTML = '';
+
+        const ext = fileUrl.split('.').pop().toLowerCase();
+        if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+            const img = document.createElement('img');
+            img.src = fileUrl;
+            img.className = 'max-w-full max-h-full object-contain rounded-xl shadow-md bg-white';
+            container.appendChild(img);
+        } else {
+            const obj = document.createElement('object');
+            obj.data = fileUrl;
+            obj.type = 'application/pdf';
+            obj.className = 'w-full h-full rounded-xl border border-slate-300 bg-white shadow-inner';
+            obj.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full p-6 text-center">
+                    <p class="text-slate-600 font-bold mb-2">Unable to preview directly in browser.</p>
+                    <a href="${fileUrl}" target="_blank" class="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold">Download File</a>
+                </div>
+            `;
+            container.appendChild(obj);
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeReader() {
+        const modal = document.getElementById('readerModal');
+        const container = document.getElementById('readerContainer');
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            container.innerHTML = '';
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+</script>
+{% endblock %}

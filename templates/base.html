@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StudyShare - NIE Notes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: { primary: '#2563eb', secondary: '#7c3aed' },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.98)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        #mobile-menu { transition: transform 0.3s ease-in-out; }
+        .menu-closed { transform: translateX(-100%); }
+        .menu-open { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 overflow-x-hidden w-full antialiased flex flex-col min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full">
+            <div class="flex items-center gap-4">
+                <button id="menu-btn" class="lg:hidden text-slate-600 hover:text-primary transition-colors">
+                    <i data-lucide="menu"></i>
+                </button>
+                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-2 group">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-lg font-extrabold tracking-tight text-slate-900 leading-none">StudyShare</span>
+                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest hidden sm:block">NIE College Notes</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Search (Hidden on Mobile) -->
+            <form action="{{ url_for('all_notes') }}" method="GET" class="hidden md:block relative w-96">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input type="text" name="q" placeholder="Search subjects or topics..." value="{{ search_query or '' }}" 
+                       class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-slate-200 rounded-full text-sm font-medium focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none">
+            </form>
+
+            <!-- Navigation Links -->
+            <div class="flex items-center gap-4">
+                <div class="hidden lg:flex items-center gap-6">
+                    <a href="{{ url_for('dashboard') }}" class="text-sm font-bold text-slate-600 hover:text-primary transition-colors">Home</a>
+                    <a href="{{ url_for('all_notes') }}" class="text-sm font-bold text-slate-600 hover:text-primary transition-colors">All Notes</a>
+                    <a href="{{ url_for('my_notes') }}" class="text-sm font-bold text-slate-600 hover:text-primary transition-colors">My Notes</a>
+                </div>
+
+                {% if session.get('student_name') %}
+                    <a href="{{ url_for('profile') }}" class="flex items-center gap-2 px-1 pr-3 py-1 bg-slate-100 border border-slate-200 rounded-full hover:bg-slate-200 transition-colors">
+                        <div class="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                            {{ session.get('student_name')[0] }}
+                        </div>
+                        <span class="text-sm font-bold hidden sm:block">{{ session.get('student_name') }}</span>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('student_login') }}" class="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-full shadow-lg shadow-slate-900/20 hover:-translate-y-0.5 transition-all">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Student Access</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Sidebar Drawer -->
+    <div id="mobile-menu" class="fixed inset-y-0 left-0 w-64 bg-white z-[100] menu-closed lg:hidden flex flex-col border-r border-slate-200">
+        <div class="p-4 flex justify-between items-center border-b border-slate-100 bg-slate-50">
+            <span class="font-extrabold text-lg text-slate-900">Menu</span>
+            <button id="close-menu-btn" class="text-slate-500 hover:text-rose-500 bg-white p-1 rounded-md shadow-sm"><i data-lucide="x"></i></button>
+        </div>
+        <nav class="flex-1 p-4 flex flex-col gap-2">
+            <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 font-bold hover:bg-blue-50 hover:text-primary transition-colors"><i data-lucide="home"></i> Home</a>
+            <a href="{{ url_for('all_notes') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 font-bold hover:bg-blue-50 hover:text-primary transition-colors"><i data-lucide="layout-grid"></i> All Notes</a>
+            <a href="{{ url_for('my_notes') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 font-bold hover:bg-blue-50 hover:text-primary transition-colors"><i data-lucide="file-text"></i> My Notes / Upload</a>
+            <a href="{{ url_for('profile') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 font-bold hover:bg-blue-50 hover:text-primary transition-colors"><i data-lucide="user"></i> Profile</a>
+        </nav>
+    </div>
+    
+    <div id="menu-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-hidden">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-auto w-full">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-xs text-slate-400 font-bold mb-2">&copy; 2026 The National Institute of Engineering (NIE). StudyShare Platform.</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        const menuBtn = document.getElementById('menu-btn');
+        const closeBtn = document.getElementById('close-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const overlay = document.getElementById('menu-overlay');
+
+        function toggleMenu() {
+            const isOpen = mobileMenu.classList.contains('menu-open');
+            if (isOpen) {
+                mobileMenu.classList.remove('menu-open');
+                mobileMenu.classList.add('menu-closed');
+                overlay.classList.add('hidden');
+            } else {
+                mobileMenu.classList.remove('menu-closed');
+                mobileMenu.classList.add('menu-open');
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        menuBtn.addEventListener('click', toggleMenu);
+        closeBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+    </script>
+</body>
+</html>
