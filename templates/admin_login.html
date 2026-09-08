@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto; background: white; padding: 2.5rem; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.05);">
+    <h2 style="text-align: center; margin-bottom: 1.5rem;">Admin Login</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p style="color: red; text-align: center; font-size: 0.85rem;">{{ messages[0] }}</p>
+      {% endif %}
+    {% endwith %}
+    <form method="POST" style="display: flex; flex-direction: column; gap: 1.2rem;">
+        <div>
+            <label style="font-size: 0.8rem; font-weight: 700;">Email</label>
+            <input type="email" name="email" required style="width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+        </div>
+        <div>
+            <label style="font-size: 0.8rem; font-weight: 700;">Password</label>
+            <input type="password" name="password" required style="width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+        </div>
+        <button type="submit" class="btn-primary-action" style="width: 100%; color: #e2e8f0; justify-content: center; background:#0f172a;">Access Admin Panel</button>
+    </form>
+</div>
+{% endblock %}

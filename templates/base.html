@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StudyShare - NIE Notes</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/image.png') }}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: { primary: '#2563eb' },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'translateY(15px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
+        .toast-enter { animation: slideInRight 0.3s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-in forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300 w-full overflow-x-hidden min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full">
+            
+            <div class="flex items-center gap-4">
+                <button id="menu-btn" class="lg:hidden text-slate-600 dark:text-slate-300">
+                    <i data-lucide="menu"></i>
+                </button>
+                <a href="{{ url_for('dashboard') }}" class="flex items-center gap-2 group">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">StudyShare</span>
+                        <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest hidden sm:block">NIE Notes</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden lg:flex items-center gap-6">
+                    <a href="{{ url_for('dashboard') }}" class="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">Home</a>
+                    <a href="{{ url_for('all_notes') }}" class="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">All Notes</a>
+                    <a href="{{ url_for('my_notes') }}" class="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">My Notes</a>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button id="theme-toggle" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <i id="theme-icon" data-lucide="moon" class="w-4 h-4"></i>
+                </button>
+
+                {% if session.get('student_name') %}
+                    <a href="{{ url_for('profile') }}" class="flex items-center gap-2 px-1 pr-3 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full">
+                        <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
+                            {{ session.get('student_name')[0] }}
+                        </div>
+                        <span class="text-sm font-bold hidden sm:block dark:text-white">{{ session.get('student_name') }}</span>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('student_login') }}" class="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-primary text-white text-sm font-bold rounded-full hover:-translate-y-0.5 transition-all">
+                        <i data-lucide="user" class="w-4 h-4"></i><span class="hidden sm:inline">Access</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Sidebar Drawer -->
+    <div id="mobile-menu" class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 z-[100] transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden flex flex-col border-r border-slate-200 dark:border-slate-800">
+        <div class="p-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+            <span class="font-extrabold text-lg text-slate-900 dark:text-white">Menu</span>
+            <button id="close-menu-btn" class="text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 p-1"><i data-lucide="x"></i></button>
+        </div>
+        <nav class="flex-1 p-4 flex flex-col gap-2">
+            <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"><i data-lucide="home"></i> Home</a>
+            <a href="{{ url_for('all_notes') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"><i data-lucide="layout-grid"></i> All Notes</a>
+            <a href="{{ url_for('my_notes') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"><i data-lucide="file-text"></i> My Notes / Upload</a>
+            <a href="{{ url_for('profile') }}" class="flex items-center gap-3 p-3 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"><i data-lucide="user"></i> Profile</a>
+        </nav>
+    </div>
+    <div id="menu-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Flash Messages via Toast -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                showToast("{{ messages[0] }}", "info");
+            });
+        </script>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-hidden">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ==========================================
+         INSPIRATIONAL WIDGETS (ADDED BEFORE FOOTER)
+         ========================================== -->
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="flex flex-col md:flex-row gap-6 w-full lg:w-3/4 mx-auto">
+            
+            <!-- Box 1: Small Notes Quote -->
+            <div class="flex-1 bg-[#f8fbff] dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-[1.5rem] p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
+                <!-- Quote Marks -->
+                <span class="absolute top-2 left-6 text-6xl font-serif text-blue-400 opacity-50 leading-none">&ldquo;</span>
+                
+                <p class="text-slate-800 dark:text-slate-200 font-extrabold text-lg text-center mt-4 mb-6 z-10">
+                    "Small notes<br>can make a big difference."
+                </p>
+                
+                <!-- Divider with Book -->
+                <div class="flex items-center justify-center w-full max-w-[220px] gap-4">
+                    <div class="h-[2px] bg-blue-200 dark:bg-slate-600 flex-1 rounded-full"></div>
+                    <div class="text-blue-600 dark:text-blue-400">
+                        <i data-lucide="book-open" class="w-7 h-7"></i>
+                    </div>
+                    <div class="h-[2px] bg-blue-200 dark:bg-slate-600 flex-1 rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- Box 2: Keep Learning -->
+            <div class="flex-1 bg-[#f0fdf4] dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-[1.5rem] p-8 flex items-center relative overflow-hidden shadow-sm">
+                <div class="flex items-center gap-4 z-10">
+                    <i data-lucide="leaf" class="w-8 h-8 text-emerald-800 dark:text-emerald-500 fill-emerald-800 dark:fill-emerald-500 transform -rotate-12"></i>
+                    <h3 class="text-emerald-900 dark:text-emerald-400 font-extrabold text-xl leading-snug">
+                        Keep Learning<br>Keep Growing
+                    </h3>
+                </div>
+                
+                <!-- Decorative Leaves -->
+                <div class="absolute -right-2 -bottom-2 opacity-30 transform translate-x-2">
+                    <div class="relative w-28 h-28">
+                        <i data-lucide="leaf" class="absolute bottom-4 right-8 w-10 h-10 text-emerald-300 dark:text-emerald-600 fill-emerald-300 dark:fill-emerald-600 transform -rotate-45"></i>
+                        <i data-lucide="leaf" class="absolute top-2 right-2 w-8 h-8 text-emerald-300 dark:text-emerald-600 fill-emerald-300 dark:fill-emerald-600 transform rotate-12"></i>
+                        <i data-lucide="leaf" class="absolute top-12 left-0 w-6 h-6 text-emerald-300 dark:text-emerald-600 fill-emerald-300 dark:fill-emerald-600 transform -rotate-90"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- College Details Footer -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pt-12 pb-8 mt-auto w-full transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+                
+                <div class="flex flex-col gap-4">
+                    <a href="https://niefgc.ac.in" target="_blank" class="flex items-center gap-3 group w-max">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                            <i data-lucide="building-2" class="w-6 h-6"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">NIE First Grade College</span>
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Mysuru, Karnataka</span>
+                        </div>
+                    </a>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed pr-4">
+                        One of the premier educational institutions in Mysuru, dedicated to providing quality education, skill development, and fostering an environment of academic excellence.
+                    </p>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Contact Details</h4>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-start gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            <div class="mt-0.5 bg-blue-50 dark:bg-blue-500/10 p-1.5 rounded-lg text-primary shrink-0"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
+                            <span>#65, NIE Campus, Vishweshwaranagar,<br>Mysuru - 570008, Karnataka, India</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            <div class="bg-blue-50 dark:bg-blue-500/10 p-1.5 rounded-lg text-primary shrink-0"><i data-lucide="phone" class="w-4 h-4"></i></div>
+                            <span>(0821) 2489676</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            <div class="bg-blue-50 dark:bg-blue-500/10 p-1.5 rounded-lg text-primary shrink-0"><i data-lucide="mail" class="w-4 h-4"></i></div>
+                            <a href="mailto:info@niefgc.ac.in" class="hover:text-primary transition-colors">info@niefgc.ac.in</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <h4 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Quick Links</h4>
+                    <div class="flex flex-col gap-2">
+                        <a href="https://niefgc.ac.in/" target="_blank" class="text-sm text-slate-500 dark:text-slate-400 font-medium hover:text-primary transition-colors flex items-center gap-2 group w-max">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-colors"></i> NIEFGC Official Site
+                        </a>
+                        <a href="https://niefgc.ac.in/alumni.php" target="_blank" class="text-sm text-slate-500 dark:text-slate-400 font-medium hover:text-primary transition-colors flex items-center gap-2 group w-max">
+                            <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-colors"></i> Alumni Association
+                        </a>
+                        <a href="{{ url_for('all_notes') }}" class="text-sm text-slate-500 dark:text-slate-400 font-medium hover:text-primary transition-colors flex items-center gap-2 group w-max">
+                            <i data-lucide="library" class="w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-colors"></i> Library Materials
+                        </a>
+                        <a href="https://niefgc.ac.in/department/commerce.php" target="_blank" class="text-sm text-slate-500 dark:text-slate-400 font-medium hover:text-primary transition-colors flex items-center gap-2 group w-max">
+                            <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-colors"></i> Academic Departments
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 dark:border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-bold text-center md:text-left">
+                    &copy; 2026 The National Institute of Engineering (NIE) First Grade College. StudyShare Platform.
+                </p>
+                <div class="flex items-center gap-3">
+                    <a href="#" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-primary hover:text-white transition-colors"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-primary hover:text-white transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-primary hover:text-white transition-colors"><i data-lucide="linkedin" class="w-4 h-4"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        const menuBtn = document.getElementById('menu-btn');
+        const closeBtn = document.getElementById('close-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const overlay = document.getElementById('menu-overlay');
+
+        function toggleMenu() {
+            const isClosed = mobileMenu.classList.contains('-translate-x-full');
+            if (isClosed) {
+                mobileMenu.classList.remove('-translate-x-full');
+                mobileMenu.classList.add('translate-x-0', 'shadow-2xl');
+                overlay.classList.remove('hidden');
+            } else {
+                mobileMenu.classList.add('-translate-x-full');
+                mobileMenu.classList.remove('translate-x-0', 'shadow-2xl');
+                overlay.classList.add('hidden');
+            }
+        }
+        menuBtn.addEventListener('click', toggleMenu);
+        closeBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        if (localStorage.theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            themeIcon.setAttribute('data-lucide', 'sun');
+        } else {
+            document.documentElement.classList.remove('dark');
+            themeIcon.setAttribute('data-lucide', 'moon');
+            localStorage.theme = 'light';
+        }
+
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.theme = 'dark';
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                localStorage.theme = 'light';
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        });
+
+        function showToast(message, type="success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            let color = type === 'success' ? 'bg-emerald-500' : 'bg-blue-600';
+            let icon = type === 'success' ? 'check-circle' : 'info';
+
+            toast.className = `toast-enter flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl text-white font-bold text-sm ${color}`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

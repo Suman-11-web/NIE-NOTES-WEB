@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-8 w-full">
+    
+    <!-- Left/Center Feed -->
+    <div class="w-full lg:w-2/3 flex flex-col gap-8">
+        
+        <!-- Classic Light Blue Hero Banner (Restored to Old Style) -->
+        <section class="relative w-full rounded-3xl bg-gradient-to-br from-[#f0f7ff] to-[#e0edfe] p-8 sm:p-10 shadow-sm border border-blue-50 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden animate-fade-in">
+            
+            <div class="w-full sm:w-3/5 text-center sm:text-left z-10">
+                <span class="inline-block text-blue-600 font-extrabold text-[10px] tracking-widest uppercase mb-3">Welcome to StudyShare</span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-4 tracking-tight">
+                    Share Notes, <br>Build a Brighter Future
+                </h1>
+                <p class="text-slate-500 text-sm sm:text-base font-medium mb-6 max-w-md mx-auto sm:mx-0">
+                    Access, share, and grow together. Get study materials from your classmates and help others too.
+                </p>
+                <a href="{{ url_for('all_notes') }}" class="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-3.5 rounded-full font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:-translate-y-0.5 transition-all">
+                    <i data-lucide="search" class="w-4 h-4"></i> Explore Notes
+                </a>
+            </div>
+
+            <!-- Classic Books Illustration recreated in Tailwind -->
+            <div class="hidden sm:block relative w-full sm:w-2/5 h-48 z-10">
+                <!-- Floating Badge -->
+                <div class="absolute top-4 right-0 bg-white px-4 py-2.5 rounded-2xl shadow-lg border border-slate-100 transform rotate-6 z-20">
+                    <p class="text-xs text-slate-500 leading-snug">Better Notes<br><strong class="text-slate-900 text-sm font-extrabold">Better Grades</strong></p>
+                </div>
+                
+                <!-- Books Stack -->
+                <div class="absolute bottom-4 right-16 z-10">
+                    <!-- Book 3 (Top - Blue) -->
+                    <div class="w-36 h-5 bg-blue-500 rounded-sm shadow-md transform -rotate-3 absolute bottom-10 right-2 border-b-2 border-blue-600"></div>
+                    <!-- Book 2 (Middle - Orange) -->
+                    <div class="w-36 h-5 bg-orange-500 rounded-sm shadow-md transform rotate-1 absolute bottom-5 right-1 border-b-2 border-orange-600"></div>
+                    <!-- Book 1 (Bottom - Green) -->
+                    <div class="w-36 h-5 bg-emerald-500 rounded-sm shadow-md transform -rotate-1 absolute bottom-0 right-0 border-b-2 border-emerald-600"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grid Branch Pills (Perfect for Mobile) -->
+        <section class="w-full opacity-0 animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="grid grid-cols-3 sm:flex sm:flex-wrap gap-3 sm:gap-4 w-full">
+                
+                <a href="{{ url_for('all_notes', branch='BCA') }}" class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:shadow-lg hover:-translate-y-1 transition-all group w-full sm:w-28">
+                    <div class="text-blue-600 group-hover:scale-110 transition-transform"><i data-lucide="monitor" class="w-6 h-6 sm:w-7 sm:h-7"></i></div>
+                    <span class="font-bold text-slate-700 text-xs sm:text-sm">BCA</span>
+                </a>
+                
+                <a href="{{ url_for('all_notes', branch='BSC(CS)') }}" class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-purple-400 hover:shadow-lg hover:-translate-y-1 transition-all group w-full sm:w-28">
+                    <div class="text-purple-600 group-hover:scale-110 transition-transform"><i data-lucide="code-2" class="w-6 h-6 sm:w-7 sm:h-7"></i></div>
+                    <span class="font-bold text-slate-700 text-xs sm:text-sm">BSC(CS)</span>
+                </a>
+
+                <a href="{{ url_for('all_notes', branch='BSC(ELECTRONICS)') }}" class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 transition-all group w-full sm:w-28">
+                    <div class="text-emerald-600 group-hover:scale-110 transition-transform"><i data-lucide="cpu" class="w-6 h-6 sm:w-7 sm:h-7"></i></div>
+                    <span class="font-bold text-slate-700 text-xs sm:text-sm text-center">BSC(ELEC)</span>
+                </a>
+
+                <a href="{{ url_for('all_notes', branch='B.COM') }}" class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-orange-400 hover:shadow-lg hover:-translate-y-1 transition-all group w-full sm:w-28">
+                    <div class="text-orange-600 group-hover:scale-110 transition-transform"><i data-lucide="trending-up" class="w-6 h-6 sm:w-7 sm:h-7"></i></div>
+                    <span class="font-bold text-slate-700 text-xs sm:text-sm">B.COM</span>
+                </a>
+                
+                <a href="{{ url_for('all_notes', branch='BBA') }}" class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 transition-all group w-full sm:w-28">
+                    <div class="text-rose-600 group-hover:scale-110 transition-transform"><i data-lucide="briefcase" class="w-6 h-6 sm:w-7 sm:h-7"></i></div>
+                    <span class="font-bold text-slate-700 text-xs sm:text-sm">BBA</span>
+                </a>
+
+                <a href="{{ url_for('all_notes') }}" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:bg-slate-100 hover:-translate-y-1 transition-all group w-full sm:w-28">
+                    <div class="text-slate-500 group-hover:scale-110 transition-transform"><i data-lucide="layout-grid" class="w-6 h-6 sm:w-7 sm:h-7"></i></div>
+                    <span class="font-bold text-slate-600 text-xs sm:text-sm text-center">All Branches</span>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Latest Notes Grid -->
+        <section class="w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-extrabold text-slate-900 flex items-center gap-2"><i data-lucide="book-open-check" class="w-6 h-6 text-slate-400"></i> Latest Notes</h3>
+                <a href="{{ url_for('all_notes') }}" class="text-sm font-extrabold text-primary hover:text-indigo-600 transition-colors">View All &rarr;</a>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4 w-full">
+                {% for note in notes %}
+                <article class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all flex flex-col w-full opacity-0 animate-fade-in" style="animation-delay: {{ 0.2 + (loop.index0 * 0.1) }}s;">
+                    
+                    <div class="flex items-center gap-2 mb-4 flex-wrap">
+                        <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-[10px] sm:text-xs font-extrabold">{{ note['subject'] }}</span>
+                        <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold">{{ note['branch'] }} • S{{ note['semester'] }}</span>
+                    </div>
+
+                    <h4 class="text-lg font-extrabold text-slate-900 mb-2">{{ note['title'] }}</h4>
+                    <p class="text-sm text-slate-500 mb-6 line-clamp-2 font-medium">{{ note['description'] }}</p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto w-full">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">{{ note['author_name'][0] }}</div>
+                            <div>
+                                <p class="text-xs font-extrabold text-slate-900">{{ note['author_name'] }} <span class="font-medium text-slate-400"> • {{ note['created_at'] }}</span></p>
+                            </div>
+                        </div>
+                        <a href="{{ note['file_link'] }}" target="_blank" class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors">
+                            <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </article>
+                {% else %}
+                <p class="text-slate-500 font-medium p-4 text-center bg-white border border-slate-200 rounded-3xl">No materials yet.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <!-- Right Sidebar Widgets -->
+    <aside class="w-full lg:w-1/3 flex flex-col gap-6 opacity-0 animate-fade-in" style="animation-delay: 0.2s;">
+        <!-- Greeting Widget -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center mb-4 shadow-md">
+                <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Hey, College Students!</h3>
+            <p class="text-sm text-slate-500 font-medium mb-6">Together we can make learning easier. Share your notes, help your friends, and build a stronger community.</p>
+            <a href="{{ url_for('my_notes') }}" class="flex items-center justify-center gap-2 w-full py-3 bg-blue-50 text-primary font-extrabold rounded-xl hover:bg-primary hover:text-white transition-colors">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload Notes
+            </a>
+        </div>
+
+        <!-- Popular Subjects Widget -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h4 class="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2"><i data-lucide="flame" class="text-orange-500 w-5 h-5"></i> Top Branches</h4>
+            <ul class="flex flex-col gap-1">
+                {% for pop in popular %}
+                <li class="flex items-center p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                    <span class="text-slate-400 font-bold w-6 text-sm">0{{ loop.index }}</span>
+                    <span class="flex-1 font-bold text-slate-700 text-sm group-hover:text-primary transition-colors">{{ pop['branch_name'] }}</span>
+                    <span class="text-xs font-bold text-slate-400">{{ pop['note_count'] }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </aside>
+</div>
+{% endblock %}

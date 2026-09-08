@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w-full opacity-0 animate-fade-in">
+    <div class="mb-8">
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white">Explore Library</h2>
+        <p class="text-slate-500 dark:text-slate-400 font-medium mt-1">Live search, bookmark, and read the best notes directly here.</p>
+    </div>
+
+    <!-- Live Search & Database Filter Bar Combined -->
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-4 shadow-sm mb-8 w-full">
+        <div class="flex flex-col lg:flex-row items-center gap-4 w-full">
+            
+            <!-- Live Frontend Search -->
+            <div class="relative w-full flex-1">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input type="text" id="liveSearch" placeholder="Type to filter notes instantly..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-700 dark:text-white focus:outline-none focus:border-primary transition-colors">
+            </div>
+            
+            <!-- Backend Dropdown Filters -->
+            <form method="GET" action="{{ url_for('all_notes') }}" class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                <select name="branch" onchange="this.form.submit()" class="w-full sm:w-auto bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none">
+                    <option value="">All Branches</option>
+                    {% for b in branches %}
+                    <option value="{{ b['name'] }}" {% if selected_branch == b['name'] %}selected{% endif %}>{{ b['name'] }}</option>
+                    {% endfor %}
+                </select>
+                <select name="semester" onchange="this.form.submit()" class="w-full sm:w-auto bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-white outline-none">
+                    <option value="">All Semesters</option>
+                    {% for i in range(1, 7) %}
+                    <option value="{{ i }}" {% if selected_semester == i|string %}selected{% endif %}>Semester {{ i }}</option>
+                    {% endfor %}
+                </select>
+                {% if selected_branch or selected_semester %}
+                <a href="{{ url_for('all_notes') }}" class="flex items-center justify-center px-4 py-3 text-sm font-bold text-rose-500 bg-rose-50 dark:bg-rose-500/10 rounded-xl hover:bg-rose-100 transition-colors">Clear</a>
+                {% endif %}
+            </form>
+
+            <button onclick="filterSaved()" class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-xl transition-colors">
+                <i data-lucide="bookmark" class="w-4 h-4"></i> Saved Notes
+            </button>
+        </div>
+    </div>
+
+    <!-- Notes Grid -->
+    <div id="notesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+        {% for note in notes %}
+        <article class="note-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between w-full relative">
+            
+            <button onclick="toggleBookmark({{ note['id'] }}, this)" class="bookmark-btn absolute top-6 right-6 text-slate-300 hover:text-amber-500 transition-colors" data-id="{{ note['id'] }}">
+                <i data-lucide="bookmark" class="w-6 h-6"></i>
+            </button>
+
+            <div>
+                <div class="flex items-start justify-between gap-2 mb-4 pr-8">
+                    <span class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-md text-[10px] font-extrabold">{{ note['subject'] }}</span>
+                </div>
+                <h4 class="text-lg font-extrabold text-slate-900 dark:text-white leading-snug mb-2">{{ note['title'] }}</h4>
+                <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 font-medium mb-3">{{ note['description'] }}</p>
+                <div class="flex gap-2">
+                    <span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-[10px] font-bold">{{ note['branch'] }} • S{{ note['semester'] }}</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700 mt-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="likeNote({{ note['id'] }}, this)" class="flex items-center gap-1 text-slate-400 hover:text-rose-500 font-bold text-xs transition-colors">
+                        <i data-lucide="heart" class="w-4 h-4"></i> <span class="like-count">{{ note['likes'] }}</span>
+                    </button>
+                    <div class="flex items-center gap-1 text-slate-400 font-bold text-xs">
+                        <i data-lucide="eye" class="w-4 h-4"></i> <span>{{ note['views'] }}</span>
+                    </div>
+                </div>
+                
+                <!-- Open Custom Reader instead of a new tab -->
+                <button onclick="openReader({{ note['id'] }}, '{{ note['file_link'] }}', '{{ note['title']|e }}')" class="px-4 py-2 bg-primary text-white rounded-xl text-xs font-extrabold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
+                    Read Note
+                </button>
+            </div>
+        </article>
+        {% else %}
+        <div class="col-span-full w-full bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-12 flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 text-slate-300 rounded-full flex items-center justify-center mb-4"><i data-lucide="search-x" class="w-8 h-8"></i></div>
+            <p class="text-slate-500 dark:text-slate-400 font-bold text-lg">No notes found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ==========================================
+     CUSTOM JS READER ENGINE MODAL
+     ========================================== -->
+<div id="readerModal" class="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-6 opacity-0 transition-opacity duration-300">
+    <!-- Modal Box -->
+    <div id="readerModalContent" class="bg-white dark:bg-slate-900 w-full max-w-5xl h-[95vh] sm:h-[90vh] rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative transform scale-95 transition-transform duration-300">
+        
+        <!-- Reader Header -->
+        <div class="px-4 sm:px-6 py-4 bg-slate-900 dark:bg-slate-950 text-white flex items-center justify-between shadow-md z-10 shrink-0">
+            <h3 id="modalTitle" class="text-sm sm:text-base font-extrabold truncate pr-4">Reading Note</h3>
+            <div class="flex items-center gap-2 sm:gap-4 shrink-0">
+                <a id="modalDownload" href="#" download class="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors text-white text-xs font-bold shadow-lg shadow-blue-500/30" title="Download File">
+                    <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Download</span>
+                </a>
+                <button onclick="closeReader()" class="p-1.5 bg-white/10 hover:bg-rose-500 rounded-xl transition-colors text-white" title="Close Reader">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Embedded Document Container -->
+        <div class="flex-1 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center overflow-auto p-2 sm:p-4" id="readerContainer">
+            <!-- Content Injected via JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Live Search
+    document.getElementById('liveSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.note-card').forEach(card => {
+            const text = card.innerText.toLowerCase();
+            card.style.display = text.includes(term) ? 'flex' : 'none';
+        });
+    });
+
+    // Bookmarks
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = JSON.parse(localStorage.getItem('savedNotes')) || [];
+        document.querySelectorAll('.bookmark-btn').forEach(btn => {
+            if (saved.includes(btn.dataset.id)) btn.classList.add('text-amber-500', 'fill-amber-500');
+        });
+    });
+
+    function toggleBookmark(id, btn) {
+        let saved = JSON.parse(localStorage.getItem('savedNotes')) || [];
+        const strId = id.toString();
+        if (saved.includes(strId)) {
+            saved = saved.filter(n => n !== strId);
+            btn.classList.remove('text-amber-500', 'fill-amber-500');
+            showToast("Removed from Saved", "info");
+        } else {
+            saved.push(strId);
+            btn.classList.add('text-amber-500', 'fill-amber-500');
+            showToast("Note Saved!", "success");
+        }
+        localStorage.setItem('savedNotes', JSON.stringify(saved));
+    }
+
+    let showingSaved = false;
+    function filterSaved() {
+        showingSaved = !showingSaved;
+        const saved = JSON.parse(localStorage.getItem('savedNotes')) || [];
+        document.querySelectorAll('.note-card').forEach(card => {
+            const id = card.querySelector('.bookmark-btn').dataset.id;
+            if (showingSaved) card.style.display = saved.includes(id) ? 'flex' : 'none';
+            else card.style.display = 'flex';
+        });
+        showToast(showingSaved ? "Showing Saved Notes" : "Showing All Notes", "info");
+    }
+
+    // Likes
+    function likeNote(id, btn) {
+        fetch(`/api/like/${id}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                btn.querySelector('.like-count').innerText = data.likes;
+                btn.classList.add('text-rose-500', 'fill-rose-500');
+                btn.classList.remove('text-slate-400');
+                showToast("Note Upvoted!", "success");
+            });
+    }
+
+    // ==========================================
+    // JS READER ENGINE LOGIC
+    // ==========================================
+    function openReader(id, fileUrl, title) {
+        // 1. Log view silently
+        fetch(`/api/view/${id}`, { method: 'POST' });
+
+        // 2. Setup Modal
+        const modal = document.getElementById('readerModal');
+        const content = document.getElementById('readerModalContent');
+        const container = document.getElementById('readerContainer');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDownload = document.getElementById('modalDownload');
+        
+        modalTitle.innerText = title;
+        modalDownload.href = fileUrl;
+        
+        // Show loading spinner
+        container.innerHTML = `
+            <div class="flex flex-col items-center text-slate-400">
+                <i data-lucide="loader-2" class="w-8 h-8 animate-spin mb-2 text-primary"></i>
+                <span class="font-bold text-sm">Loading document...</span>
+            </div>
+        `;
+        lucide.createIcons();
+
+        // 3. Trigger Open Animation
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }, 10);
+        document.body.style.overflow = 'hidden';
+
+        // 4. Inject Content
+        const ext = fileUrl.split('.').pop().toLowerCase();
+        setTimeout(() => {
+            container.innerHTML = ''; // Clear loader
+            
+            if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+                // Image Engine
+                const img = document.createElement('img');
+                img.src = fileUrl;
+                img.className = 'max-w-full max-h-full object-contain rounded-xl shadow-md bg-white dark:bg-slate-950';
+                container.appendChild(img);
+            } else {
+                // PDF / Object Engine
+                const obj = document.createElement('object');
+                obj.data = fileUrl;
+                obj.type = ext === 'pdf' ? 'application/pdf' : 'application/octet-stream';
+                obj.className = 'w-full h-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-inner';
+                
+                // Fallback for files browsers cannot natively render
+                obj.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full p-6 text-center bg-slate-50 dark:bg-slate-800 rounded-xl">
+                        <i data-lucide="file-warning" class="w-12 h-12 text-amber-500 mb-4"></i>
+                        <p class="text-slate-600 dark:text-slate-300 font-extrabold mb-2 text-lg">Browser Preview Not Supported</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Your browser cannot display this file type directly.</p>
+                        <a href="${fileUrl}" target="_blank" class="px-6 py-3 bg-primary hover:bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2">
+                            <i data-lucide="download" class="w-4 h-4"></i> Download to View
+                        </a>
+                    </div>
+                `;
+                container.appendChild(obj);
+                lucide.createIcons();
+            }
+        }, 400); // Tiny delay to let animations run smoothly
+    }
+
+    function closeReader() {
+        const modal = document.getElementById('readerModal');
+        const content = document.getElementById('readerModalContent');
+        const container = document.getElementById('readerContainer');
+        
+        // Trigger Close Animation
+        modal.classList.add('opacity-0');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+        
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            container.innerHTML = ''; // Clear memory
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+</script>
+{% endblock %}
